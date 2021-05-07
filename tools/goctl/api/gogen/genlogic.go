@@ -22,6 +22,9 @@ type {{.logic}} struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
+	Code int
+	Msg string
+	Version string
 }
 
 func New{{.logic}}(ctx context.Context, svcCtx *svc.ServiceContext) {{.logic}} {
