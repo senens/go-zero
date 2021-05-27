@@ -28,7 +28,7 @@ func {{.HandlerName}}(ctx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}{{end}}
 
-		l := logic.New{{.LogicType}}(r.Context(), ctx)
+		l := logic.New{{.LogicType}}(r.Context(), ctx, r.Header)
 		{{if .HasResp}}resp, {{end}}err := l.{{.Call}}({{if .HasRequest}}req{{end}})
 		if err != nil {
 			httpx.RespJsonError(w, err)

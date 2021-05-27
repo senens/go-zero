@@ -25,13 +25,15 @@ type {{.logic}} struct {
 	Code int
 	Msg string
 	Version string
+	Header  http.Header
 }
 
-func New{{.logic}}(ctx context.Context, svcCtx *svc.ServiceContext) {{.logic}} {
+func New{{.logic}}(ctx context.Context, svcCtx *svc.ServiceContext, header http.Header) {{.logic}} {
 	return {{.logic}}{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		Header: header,
 	}
 }
 
