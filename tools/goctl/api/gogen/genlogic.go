@@ -15,6 +15,7 @@ import (
 const logicTemplate = `package logic
 
 import (
+	"net/http"
 	{{.imports}}
 )
 
