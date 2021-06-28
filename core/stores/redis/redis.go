@@ -71,6 +71,8 @@ type (
 	IntCmd = red.IntCmd
 	// FloatCmd is an alias of redis.FloatCmd.
 	FloatCmd = red.FloatCmd
+	// StringCmd is an alias of redis.StringCmd.
+	StringCmd = red.StringCmd
 )
 
 // New returns a Redis with given options.
@@ -948,6 +950,21 @@ func (s *Redis) Pipelined(fn func(Pipeliner) error) (err error) {
 	}, acceptable)
 
 	return
+}
+
+// PipilinedGet lets fn to execute pipeline get commands
+func (s *Redis) PipelinedGet(keys []string) (result []red.Cmder, err error) {
+	conn, err := getRedis(s)
+	if err != nil {
+		return
+	}
+
+	pipe := conn.Pipeline()
+	for _, key := range keys {
+		pipe.Get(key)
+	}
+
+	return pipe.Exec()
 }
 
 // Rpop is the implementation of redis rpop command.
