@@ -70,9 +70,15 @@ func begin(db *sql.DB) (trans, error) {
 }
 
 func transact(db *commonSqlConn, b beginnable, fn func(Session) error) (err error) {
-	conn, err := getSqlConn(db.driverName, db.datasource)
+	datasource, err := db.DataSourceResp("", false, db.datasource)
 	if err != nil {
-		logInstanceError(db.datasource, err)
+		logInstanceError(datasource, err)
+		return err
+	}
+
+	conn, err := getSqlConn(db.driverName, datasource)
+	if err != nil {
+		logInstanceError(datasource, err)
 		return err
 	}
 
