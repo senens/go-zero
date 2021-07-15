@@ -203,6 +203,7 @@ func (db *commonSqlConn) queryRows(scanner func(*sql.Rows) error, q string, args
 	var qerr error
 	return db.brk.DoWithAcceptable(func() error {
 		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
+		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
 			return err
