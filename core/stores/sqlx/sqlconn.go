@@ -2,12 +2,18 @@ package sqlx
 
 import (
 	"database/sql"
+	"errors"
+	"regexp"
+	"strings"
 
 	"github.com/tal-tech/go-zero/core/breaker"
 )
 
 // ErrNotFound is an alias of sql.ErrNoRows
-var ErrNotFound = sql.ErrNoRows
+var (
+	ErrNotFound     = sql.ErrNoRows
+	DefaultMatchSql = "SELECT"
+)
 
 type (
 	// Session stands for raw connections or transaction sessions
@@ -44,7 +50,8 @@ type (
 	// query arguments into one string and do underlying query without arguments
 	commonSqlConn struct {
 		driverName string
-		datasource string
+		datasource map[string]string
+		cluster    bool
 		beginTx    beginnable
 		brk        breaker.Breaker
 		accept     func(error) bool
@@ -66,10 +73,11 @@ type (
 )
 
 // NewSqlConn returns a SqlConn with given driver name and datasource.
-func NewSqlConn(driverName, datasource string, opts ...SqlOption) SqlConn {
+func NewSqlConn(driverName string, datasource map[string]string, cluster bool, opts ...SqlOption) SqlConn {
 	conn := &commonSqlConn{
 		driverName: driverName,
 		datasource: datasource,
+		cluster:    cluster,
 		beginTx:    begin,
 		brk:        breaker.NewBreaker(),
 	}
@@ -80,12 +88,37 @@ func NewSqlConn(driverName, datasource string, opts ...SqlOption) SqlConn {
 	return conn
 }
 
+func (db *commonSqlConn) DataSourceResp(q string, cluster bool, datasource map[string]string) (string, error) {
+	if cluster {
+		reg := regexp.MustCompile(`(?U)^.* `).FindAllString(strings.TrimSpace(q), -1)
+		if strings.ToUpper(strings.TrimSpace(reg[0])) == DefaultMatchSql {
+			if _, ok := datasource["slave"]; ok {
+				return datasource["slave"], nil
+			} else {
+				return "", errors.New("dataSource config slave error")
+			}
+		}
+	}
+
+	if _, ok := datasource["master"]; ok { //only use master
+		return datasource["master"], nil
+	} else {
+		return "", errors.New("dataSource config master error")
+	}
+}
+
 func (db *commonSqlConn) Exec(q string, args ...interface{}) (result sql.Result, err error) {
 	err = db.brk.DoWithAcceptable(func() error {
-		var conn *sql.DB
-		conn, err = getSqlConn(db.driverName, db.datasource)
+		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
 		if err != nil {
-			logInstanceError(db.datasource, err)
+			logInstanceError(datasource, err)
+			return err
+		}
+
+		var conn *sql.DB
+		conn, err = getSqlConn(db.driverName, datasource)
+		if err != nil {
+			logInstanceError(datasource, err)
 			return err
 		}
 
@@ -98,10 +131,16 @@ func (db *commonSqlConn) Exec(q string, args ...interface{}) (result sql.Result,
 
 func (db *commonSqlConn) Prepare(query string) (stmt StmtSession, err error) {
 	err = db.brk.DoWithAcceptable(func() error {
-		var conn *sql.DB
-		conn, err = getSqlConn(db.driverName, db.datasource)
+		datasource, err := db.DataSourceResp(query, db.cluster, db.datasource)
 		if err != nil {
-			logInstanceError(db.datasource, err)
+			logInstanceError(datasource, err)
+			return err
+		}
+
+		var conn *sql.DB
+		conn, err = getSqlConn(db.driverName, datasource)
+		if err != nil {
+			logInstanceError(datasource, err)
 			return err
 		}
 
@@ -161,9 +200,15 @@ func (db *commonSqlConn) acceptable(err error) bool {
 func (db *commonSqlConn) queryRows(scanner func(*sql.Rows) error, q string, args ...interface{}) error {
 	var qerr error
 	return db.brk.DoWithAcceptable(func() error {
-		conn, err := getSqlConn(db.driverName, db.datasource)
+		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
 		if err != nil {
-			logInstanceError(db.datasource, err)
+			logInstanceError(datasource, err)
+			return err
+		}
+
+		conn, err := getSqlConn(db.driverName, datasource)
+		if err != nil {
+			logInstanceError(datasource, err)
 			return err
 		}
 
