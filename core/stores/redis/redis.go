@@ -22,7 +22,7 @@ const (
 	blockingQueryTimeout = 5 * time.Second
 	readWriteTimeout     = 2 * time.Second
 
-	slowThreshold = time.Millisecond * 100
+	slowThreshold = time.Millisecond * 1
 )
 
 // ErrNilNode is an error that indicates a nil redis node.
