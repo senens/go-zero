@@ -1498,6 +1498,21 @@ func (s *Redis) Zrank(key, field string) (val int64, err error) {
 	return
 }
 
+// Zscan is the implementation of redis Zscan command.
+func (s *Redis) Zscan(key string, cursor uint64, match string, count int64) (keys []string, cur uint64, err error) {
+	err = s.brk.DoWithAcceptable(func() error {
+		conn, err := getRedis(s)
+		if err != nil {
+			return err
+		}
+
+		keys, cur, err = conn.ZScan(key, cursor, match, count).Result()
+		return err
+	}, acceptable)
+
+	return
+}
+
 // Zrem is the implementation of redis zrem command.
 func (s *Redis) Zrem(key string, values ...interface{}) (val int, err error) {
 	err = s.brk.DoWithAcceptable(func() error {
