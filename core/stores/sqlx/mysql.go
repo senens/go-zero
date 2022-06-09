@@ -8,9 +8,15 @@ const (
 )
 
 // NewMysql returns a mysql connection.
-func NewMysql(datasource map[string]string, cluster bool, opts ...SqlOption) SqlConn {
+func NewMysql(datasource string, opts ...SqlOption) SqlConn {
 	opts = append(opts, withMysqlAcceptable())
-	return NewSqlConn(mysqlDriverName, datasource, cluster, opts...)
+	return NewSqlConn(mysqlDriverName, datasource, opts...)
+}
+
+// NewMysqlCluster returns a mysql cluster connection.
+func NewMysqlCluster(datasource map[string]string, cluster bool, opts ...SqlOption) SqlConn {
+	opts = append(opts, withMysqlAcceptable())
+	return NewSqlConnCluster(mysqlDriverName, datasource, cluster, opts...)
 }
 
 func mysqlAcceptable(err error) bool {

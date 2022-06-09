@@ -10,5 +10,5 @@ const clickHouseDriverName = "clickhouse"
 
 // New returns a clickhouse connection.
 func New(datasource string, opts ...sqlx.SqlOption) sqlx.SqlConn {
-	return sqlx.NewSqlConnOther(clickHouseDriverName, datasource, opts...)
+	return sqlx.NewSqlConn(clickHouseDriverName, datasource, opts...)
 }

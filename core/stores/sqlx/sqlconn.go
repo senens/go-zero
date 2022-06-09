@@ -101,7 +101,26 @@ type (
 )
 
 // NewSqlConn returns a SqlConn with given driver name and datasource.
-func NewSqlConn(driverName string, datasource map[string]string, cluster bool, opts ...SqlOption) SqlConn {
+func NewSqlConn(driverName string, datasource string, opts ...SqlOption) SqlConn {
+	conn := &commonSqlConn{
+		connProv: func(ds string) (*sql.DB, error) {
+			return getSqlConn(driverName, datasource)
+		},
+		onError: func(ds string, err error) {
+			logInstanceError(datasource, err)
+		},
+		beginTx: begin,
+		brk:     breaker.NewBreaker(),
+	}
+	for _, opt := range opts {
+		opt(conn)
+	}
+
+	return conn
+}
+
+// NewSqlConnCluster returns a SqlConn with given driver name and datasource.
+func NewSqlConnCluster(driverName string, datasource map[string]string, cluster bool, opts ...SqlOption) SqlConn {
 	conn := &commonSqlConn{
 		connProv: func(ds string) (*sql.DB, error) {
 			return getSqlConn(driverName, ds)
@@ -113,25 +132,6 @@ func NewSqlConn(driverName string, datasource map[string]string, cluster bool, o
 		cluster:    cluster,
 		beginTx:    begin,
 		brk:        breaker.NewBreaker(),
-	}
-	for _, opt := range opts {
-		opt(conn)
-	}
-
-	return conn
-}
-
-// NewSqlConnOther returns a SqlConn with given driver name and datasource.
-func NewSqlConnOther(driverName string, datasource string, opts ...SqlOption) SqlConn {
-	conn := &commonSqlConn{
-		connProv: func(ds string) (*sql.DB, error) {
-			return getSqlConn(driverName, datasource)
-		},
-		onError: func(ds string, err error) {
-			logInstanceError(ds, err)
-		},
-		beginTx: begin,
-		brk:     breaker.NewBreaker(),
 	}
 	for _, opt := range opts {
 		opt(conn)
