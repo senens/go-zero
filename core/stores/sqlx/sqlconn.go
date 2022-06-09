@@ -121,11 +121,13 @@ func NewSqlConn(driverName string, datasource map[string]string, cluster bool, o
 	return conn
 }
 
+// TODO not used.
 // NewSqlConnFromDB returns a SqlConn with the given sql.DB.
 // Use it with caution, it's provided for other ORM to interact with.
 func NewSqlConnFromDB(db *sql.DB, opts ...SqlOption) SqlConn {
 	conn := &commonSqlConn{
 		connProv: func(ds string) (*sql.DB, error) {
+			// TODO not used.
 			return db, nil
 		},
 		onError: func(ds string, err error) {
