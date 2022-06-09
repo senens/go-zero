@@ -36,7 +36,7 @@ func TestBreakerOnNotHandlingDuplicateEntry(t *testing.T) {
 }
 
 func TestMysqlAcceptable(t *testing.T) {
-	conn := NewMysql("nomysql").(*commonSqlConn)
+	conn := NewMysql(map[string]string{}, false).(*commonSqlConn)
 	withMysqlAcceptable()(conn)
 	assert.EqualValues(t, reflect.ValueOf(mysqlAcceptable).Pointer(), reflect.ValueOf(conn.accept).Pointer())
 	assert.True(t, mysqlAcceptable(nil))

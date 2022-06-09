@@ -3,6 +3,9 @@ package sqlx
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"regexp"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/breaker"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -66,14 +69,16 @@ type (
 	// Because CORBA doesn't support PREPARE, so we need to combine the
 	// query arguments into one string and do underlying query without arguments
 	commonSqlConn struct {
-		connProv connProvider
-		onError  func(error)
-		beginTx  beginnable
-		brk      breaker.Breaker
-		accept   func(error) bool
+		connProv   connProvider
+		onError    func(string, error)
+		datasource map[string]string
+		cluster    bool
+		beginTx    beginnable
+		brk        breaker.Breaker
+		accept     func(error) bool
 	}
 
-	connProvider func() (*sql.DB, error)
+	connProvider func(ds string) (*sql.DB, error)
 
 	sessionConn interface {
 		Exec(query string, args ...interface{}) (sql.Result, error)
@@ -96,16 +101,18 @@ type (
 )
 
 // NewSqlConn returns a SqlConn with given driver name and datasource.
-func NewSqlConn(driverName, datasource string, opts ...SqlOption) SqlConn {
+func NewSqlConn(driverName string, datasource map[string]string, cluster bool, opts ...SqlOption) SqlConn {
 	conn := &commonSqlConn{
-		connProv: func() (*sql.DB, error) {
-			return getSqlConn(driverName, datasource)
+		connProv: func(ds string) (*sql.DB, error) {
+			return getSqlConn(driverName, ds)
 		},
-		onError: func(err error) {
-			logInstanceError(datasource, err)
+		onError: func(ds string, err error) {
+			logInstanceError(ds, err)
 		},
-		beginTx: begin,
-		brk:     breaker.NewBreaker(),
+		datasource: datasource,
+		cluster:    cluster,
+		beginTx:    begin,
+		brk:        breaker.NewBreaker(),
 	}
 	for _, opt := range opts {
 		opt(conn)
@@ -118,11 +125,11 @@ func NewSqlConn(driverName, datasource string, opts ...SqlOption) SqlConn {
 // Use it with caution, it's provided for other ORM to interact with.
 func NewSqlConnFromDB(db *sql.DB, opts ...SqlOption) SqlConn {
 	conn := &commonSqlConn{
-		connProv: func() (*sql.DB, error) {
+		connProv: func(ds string) (*sql.DB, error) {
 			return db, nil
 		},
-		onError: func(err error) {
-			logx.Errorf("Error on getting sql instance: %v", err)
+		onError: func(ds string, err error) {
+			logx.Errorf("Error on getting sql instance: dataSource %v error %v", ds, err)
 		},
 		beginTx: begin,
 		brk:     breaker.NewBreaker(),
@@ -132,6 +139,25 @@ func NewSqlConnFromDB(db *sql.DB, opts ...SqlOption) SqlConn {
 	}
 
 	return conn
+}
+
+func (db *commonSqlConn) DataSourceResp(q string, cluster bool, datasource map[string]string) (string, error) {
+	if cluster {
+		reg := regexp.MustCompile(`(?U)^.* `).FindAllString(strings.TrimSpace(q), -1)
+		if strings.ToUpper(strings.TrimSpace(reg[0])) == DefaultMatchSql {
+			if _, ok := datasource["slave"]; ok {
+				return datasource["slave"], nil
+			} else {
+				return "", errors.New("dataSource config slave error")
+			}
+		}
+	}
+
+	if _, ok := datasource["master"]; ok { //only use master
+		return datasource["master"], nil
+	} else {
+		return "", errors.New("dataSource config master error")
+	}
 }
 
 func (db *commonSqlConn) Exec(q string, args ...interface{}) (result sql.Result, err error) {
@@ -146,10 +172,17 @@ func (db *commonSqlConn) ExecCtx(ctx context.Context, q string, args ...interfac
 	}()
 
 	err = db.brk.DoWithAcceptable(func() error {
-		var conn *sql.DB
-		conn, err = db.connProv()
+		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
+		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
-			db.onError(err)
+			logInstanceError(datasource, err)
+			return err
+		}
+
+		var conn *sql.DB
+		conn, err = db.connProv(datasource)
+		if err != nil {
+			db.onError(datasource, err)
 			return err
 		}
 
@@ -171,10 +204,17 @@ func (db *commonSqlConn) PrepareCtx(ctx context.Context, query string) (stmt Stm
 	}()
 
 	err = db.brk.DoWithAcceptable(func() error {
-		var conn *sql.DB
-		conn, err = db.connProv()
+		datasource, err := db.DataSourceResp(query, db.cluster, db.datasource)
+		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", query, db.cluster, db.datasource, datasource)
 		if err != nil {
-			db.onError(err)
+			logInstanceError(datasource, err)
+			return err
+		}
+
+		var conn *sql.DB
+		conn, err = db.connProv(datasource)
+		if err != nil {
+			db.onError(datasource, err)
 			return err
 		}
 
@@ -258,7 +298,8 @@ func (db *commonSqlConn) QueryRowsPartialCtx(ctx context.Context, v interface{},
 }
 
 func (db *commonSqlConn) RawDB() (*sql.DB, error) {
-	return db.connProv()
+	// TODO not used.
+	return db.connProv("")
 }
 
 func (db *commonSqlConn) Transact(fn func(Session) error) error {
@@ -291,9 +332,16 @@ func (db *commonSqlConn) queryRows(ctx context.Context, scanner func(*sql.Rows) 
 	q string, args ...interface{}) (err error) {
 	var qerr error
 	return db.brk.DoWithAcceptable(func() error {
-		conn, err := db.connProv()
+		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
+		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
-			db.onError(err)
+			logInstanceError(datasource, err)
+			return err
+		}
+
+		conn, err := db.connProv(datasource)
+		if err != nil {
+			db.onError(datasource, err)
 			return err
 		}
 
