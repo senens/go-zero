@@ -7,12 +7,12 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/antlr/antlr4/runtime/Go/antlr"
+	"github.com/zeromicro/antlr"
 )
 
 const (
 	versionRegex     = `(?m)"v[1-9][0-9]*"`
-	importValueRegex = `(?m)"(/?[a-zA-Z0-9_#-])+\.api"`
+	importValueRegex = `(?m)"\/?(?:[^/]+\/)*[^/]+.api"`
 	tagRegex         = `(?m)\x60[a-z]+:".+"\x60`
 )
 

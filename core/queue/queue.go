@@ -6,11 +6,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/tal-tech/go-zero/core/logx"
-	"github.com/tal-tech/go-zero/core/rescue"
-	"github.com/tal-tech/go-zero/core/stat"
-	"github.com/tal-tech/go-zero/core/threading"
-	"github.com/tal-tech/go-zero/core/timex"
+	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/rescue"
+	"github.com/zeromicro/go-zero/core/stat"
+	"github.com/zeromicro/go-zero/core/threading"
+	"github.com/zeromicro/go-zero/core/timex"
 )
 
 const queueName = "queue"
@@ -71,7 +71,7 @@ func NewQueue(producerFactory ProducerFactory, consumerFactory ConsumerFactory) 
 	return q
 }
 
-// AddListener adds a litener to q.
+// AddListener adds a listener to q.
 func (q *Queue) AddListener(listener Listener) {
 	q.listeners = append(q.listeners, listener)
 }

@@ -2,38 +2,22 @@ package docgen
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"html/template"
 	"strconv"
 	"strings"
 
-	"github.com/tal-tech/go-zero/core/stringx"
-	"github.com/tal-tech/go-zero/tools/goctl/api/gogen"
-	"github.com/tal-tech/go-zero/tools/goctl/api/spec"
-	"github.com/tal-tech/go-zero/tools/goctl/api/util"
+	"github.com/zeromicro/go-zero/core/stringx"
+	"github.com/zeromicro/go-zero/tools/goctl/api/gogen"
+	"github.com/zeromicro/go-zero/tools/goctl/api/spec"
+	"github.com/zeromicro/go-zero/tools/goctl/api/util"
 )
 
-const (
-	markdownTemplate = `
-### {{.index}}. {{.routeComment}}
+//go:embed markdown.tpl
+var markdownTemplate string
 
-1. 路由定义
-
-- Url: {{.uri}}
-- Method: {{.method}}
-- Request: {{.requestType}}
-- Response: {{.responseType}}
-
-2. 请求定义
-{{.requestContent}}
-
-3. 返回定义
-{{.responseContent}}  
-
-`
-)
-
-func genDoc(api *spec.ApiSpec, dir string, filename string) error {
+func genDoc(api *spec.ApiSpec, dir, filename string) error {
 	fp, _, err := util.MaybeCreateFile(dir, "", filename)
 	if err != nil {
 		return err

@@ -1,63 +1,56 @@
-module github.com/tal-tech/go-zero
+module github.com/zeromicro/go-zero
 
-go 1.14
+go 1.16
 
 require (
-	github.com/ClickHouse/clickhouse-go v1.4.3
-	github.com/DATA-DOG/go-sqlmock v1.4.1
-	github.com/alicebob/miniredis/v2 v2.14.1
-	github.com/antlr/antlr4 v0.0.0-20210105212045-464bcbc32de2
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/emicklei/proto v1.9.0
-	github.com/fatih/color v1.9.0 // indirect
-	github.com/fatih/structtag v1.2.0
-	github.com/frankban/quicktest v1.7.2 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.0.14
+	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/alicebob/miniredis/v2 v2.21.0
+	github.com/fatih/color v1.13.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
-	github.com/go-redis/redis v6.15.7+incompatible
-	github.com/go-sql-driver/mysql v1.5.0
-	github.com/go-xorm/builder v0.3.4
-	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
-	github.com/golang/mock v1.4.3
-	github.com/golang/protobuf v1.4.2
-	github.com/google/uuid v1.1.1
-	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.14.3 // indirect
-	github.com/iancoleman/strcase v0.1.2
+	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-sql-driver/mysql v1.6.0
+	github.com/golang-jwt/jwt/v4 v4.4.1
+	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.3.0
 	github.com/justinas/alice v1.2.0
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
-	github.com/lib/pq v1.3.0
-	github.com/logrusorgru/aurora v2.0.3+incompatible
-	github.com/mattn/go-colorable v0.1.6 // indirect
-	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/olekukonko/tablewriter v0.0.4
-	github.com/onsi/ginkgo v1.7.0 // indirect
-	github.com/onsi/gomega v1.5.0 // indirect
-	github.com/pierrec/lz4 v2.5.1+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.5.1
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/lib/pq v1.10.6
+	github.com/olekukonko/tablewriter v0.0.5
+	github.com/pelletier/go-toml/v2 v2.0.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/spaolacci/murmur3 v1.1.0
-	github.com/stretchr/testify v1.5.1
-	github.com/tmc/grpc-websocket-proxy v0.0.0-20171017195756-830351dc03c6 // indirect
-	github.com/urfave/cli v1.22.5
-	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
-	go.etcd.io/etcd v0.0.0-20200402134248-51bdeb39e698
-	go.uber.org/automaxprocs v1.3.0
-	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
-	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20200410132612-ae9902aceb98 // indirect
-	google.golang.org/genproto v0.0.0-20200729003335-053ba62fc06f // indirect
-	google.golang.org/grpc v1.29.1
-	google.golang.org/protobuf v1.25.0 // indirect
+	github.com/stretchr/testify v1.7.1
+	go.etcd.io/etcd/api/v3 v3.5.4
+	go.etcd.io/etcd/client/v3 v3.5.4
+	go.mongodb.org/mongo-driver v1.9.1
+	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel/exporters/jaeger v1.7.0
+	go.opentelemetry.io/otel/exporters/zipkin v1.7.0
+	go.opentelemetry.io/otel/sdk v1.7.0
+	go.opentelemetry.io/otel/trace v1.7.0
+	go.uber.org/automaxprocs v1.5.1
+	go.uber.org/goleak v1.1.12
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+	golang.org/x/time v0.0.0-20220411224347-583f2d630306
+	google.golang.org/grpc v1.47.0
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
-	gopkg.in/h2non/gock.v1 v1.0.15
+	gopkg.in/h2non/gock.v1 v1.1.2
 	gopkg.in/yaml.v2 v2.4.0
-	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
-	sigs.k8s.io/yaml v1.2.0 // indirect
+	k8s.io/api v0.22.9
+	k8s.io/apimachinery v0.22.9
+	k8s.io/client-go v0.22.9
+	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
+)
+
+require (
+	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/zap v1.21.0 // indirect
+	golang.org/x/net v0.0.0-20220531201128-c960675eff93 // indirect
+	google.golang.org/genproto v0.0.0-20220602131408-e326c6e8e9c8 // indirect
+	k8s.io/klog/v2 v2.40.1 // indirect
 )
