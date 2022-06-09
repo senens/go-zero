@@ -121,6 +121,25 @@ func NewSqlConn(driverName string, datasource map[string]string, cluster bool, o
 	return conn
 }
 
+// NewSqlConnOther returns a SqlConn with given driver name and datasource.
+func NewSqlConnOther(driverName string, datasource string, opts ...SqlOption) SqlConn {
+	conn := &commonSqlConn{
+		connProv: func(ds string) (*sql.DB, error) {
+			return getSqlConn(driverName, datasource)
+		},
+		onError: func(ds string, err error) {
+			logInstanceError(ds, err)
+		},
+		beginTx: begin,
+		brk:     breaker.NewBreaker(),
+	}
+	for _, opt := range opts {
+		opt(conn)
+	}
+
+	return conn
+}
+
 // TODO not used.
 // NewSqlConnFromDB returns a SqlConn with the given sql.DB.
 // Use it with caution, it's provided for other ORM to interact with.
