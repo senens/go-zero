@@ -43,8 +43,14 @@ func genLogicByRoute(dir, rootPkg string, cfg *config.Config, group spec.Group, 
 	var requestString string
 	if len(route.ResponseTypeName()) > 0 {
 		resp := responseGoTypeName(route, typesPacket)
-		responseString = "(resp " + resp + ", err error)"
-		returnString = "return"
+		//responseString = "(resp " + resp + ", err error)"
+		//returnString = "return"
+		responseString = "(" + resp + ", error)"
+		if strings.HasPrefix(resp, "*") {
+			returnString = fmt.Sprintf("return &%s{}, nil", strings.TrimPrefix(resp, "*"))
+		} else {
+			returnString = fmt.Sprintf("return %s{}, nil", resp)
+		}
 	} else {
 		responseString = "error"
 		returnString = "return nil"

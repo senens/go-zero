@@ -138,7 +138,7 @@ func begin(db *sql.DB) (trans, error) {
 
 func transact(ctx context.Context, db *commonSqlConn, b beginnable,
 	fn func(context.Context, Session) error) (err error) {
-	datasource, err := db.DataSourceResp("", db.cluster, db.datasource)
+	datasource, err := db.DataSourceResp("")
 	logx.Infof("exec DataSourceResp data %v,%v,%v,%v", "", db.cluster, db.datasource, datasource)
 	if err != nil {
 		logInstanceError(datasource, err)

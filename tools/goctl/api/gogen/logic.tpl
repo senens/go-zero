@@ -1,6 +1,8 @@
 package {{.pkgName}}
 
 import (
+	"net/http"
+
 	{{.imports}}
 )
 

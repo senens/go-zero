@@ -69,13 +69,14 @@ type (
 	// Because CORBA doesn't support PREPARE, so we need to combine the
 	// query arguments into one string and do underlying query without arguments
 	commonSqlConn struct {
-		connProv   connProvider
-		onError    func(string, error)
-		datasource map[string]string
-		cluster    bool
-		beginTx    beginnable
-		brk        breaker.Breaker
-		accept     func(error) bool
+		connProv    connProvider
+		onError     func(string, error)
+		datasource  map[string]string // 在集群模式启用情况下，指定 `master` 和 `slave` 数据库连接信息
+		cluster     bool              // 在集群模式启用情况下，是否启用读写分离
+		clusterMode bool              // 标识当前是单表模式还是集群模式
+		beginTx     beginnable
+		brk         breaker.Breaker
+		accept      func(error) bool
 	}
 
 	connProvider func(ds string) (*sql.DB, error)
@@ -109,8 +110,11 @@ func NewSqlConn(driverName string, datasource string, opts ...SqlOption) SqlConn
 		onError: func(ds string, err error) {
 			logInstanceError(datasource, err)
 		},
-		beginTx: begin,
-		brk:     breaker.NewBreaker(),
+		datasource:  map[string]string{},
+		cluster:     false,
+		clusterMode: false,
+		beginTx:     begin,
+		brk:         breaker.NewBreaker(),
 	}
 	for _, opt := range opts {
 		opt(conn)
@@ -128,10 +132,11 @@ func NewSqlConnCluster(driverName string, datasource map[string]string, cluster 
 		onError: func(ds string, err error) {
 			logInstanceError(ds, err)
 		},
-		datasource: datasource,
-		cluster:    cluster,
-		beginTx:    begin,
-		brk:        breaker.NewBreaker(),
+		datasource:  datasource,
+		cluster:     cluster,
+		clusterMode: true,
+		beginTx:     begin,
+		brk:         breaker.NewBreaker(),
 	}
 	for _, opt := range opts {
 		opt(conn)
@@ -146,7 +151,6 @@ func NewSqlConnCluster(driverName string, datasource map[string]string, cluster 
 func NewSqlConnFromDB(db *sql.DB, opts ...SqlOption) SqlConn {
 	conn := &commonSqlConn{
 		connProv: func(ds string) (*sql.DB, error) {
-			// TODO not used.
 			return db, nil
 		},
 		onError: func(ds string, err error) {
@@ -162,22 +166,26 @@ func NewSqlConnFromDB(db *sql.DB, opts ...SqlOption) SqlConn {
 	return conn
 }
 
-func (db *commonSqlConn) DataSourceResp(q string, cluster bool, datasource map[string]string) (string, error) {
-	if cluster {
-		reg := regexp.MustCompile(`(?U)^.* `).FindAllString(strings.TrimSpace(q), -1)
-		if strings.ToUpper(strings.TrimSpace(reg[0])) == DefaultMatchSql {
-			if _, ok := datasource["slave"]; ok {
-				return datasource["slave"], nil
-			} else {
-				return "", errors.New("dataSource config slave error")
+func (db *commonSqlConn) DataSourceResp(query string) (string, error) {
+	if db.clusterMode {
+		if db.cluster {
+			reg := regexp.MustCompile(`(?U)^.* `).FindAllString(strings.TrimSpace(query), -1)
+			if strings.ToUpper(strings.TrimSpace(reg[0])) == DefaultMatchSql {
+				if _, ok := db.datasource["slave"]; ok {
+					return db.datasource["slave"], nil
+				} else {
+					return "", errors.New("dataSource config slave error")
+				}
 			}
 		}
-	}
 
-	if _, ok := datasource["master"]; ok { //only use master
-		return datasource["master"], nil
+		if _, ok := db.datasource["master"]; ok { //only use master
+			return db.datasource["master"], nil
+		} else {
+			return "", errors.New("dataSource config master error")
+		}
 	} else {
-		return "", errors.New("dataSource config master error")
+		return "", nil
 	}
 }
 
@@ -193,7 +201,7 @@ func (db *commonSqlConn) ExecCtx(ctx context.Context, q string, args ...interfac
 	}()
 
 	err = db.brk.DoWithAcceptable(func() error {
-		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
+		datasource, err := db.DataSourceResp(q)
 		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
@@ -225,7 +233,7 @@ func (db *commonSqlConn) PrepareCtx(ctx context.Context, query string) (stmt Stm
 	}()
 
 	err = db.brk.DoWithAcceptable(func() error {
-		datasource, err := db.DataSourceResp(query, db.cluster, db.datasource)
+		datasource, err := db.DataSourceResp(query)
 		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", query, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
@@ -353,7 +361,7 @@ func (db *commonSqlConn) queryRows(ctx context.Context, scanner func(*sql.Rows) 
 	q string, args ...interface{}) (err error) {
 	var qerr error
 	return db.brk.DoWithAcceptable(func() error {
-		datasource, err := db.DataSourceResp(q, db.cluster, db.datasource)
+		datasource, err := db.DataSourceResp(q)
 		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
