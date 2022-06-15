@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/tal-tech/go-zero/core/lang"
-	"github.com/tal-tech/go-zero/core/mapping"
+	"github.com/zeromicro/go-zero/core/lang"
+	"github.com/zeromicro/go-zero/core/mapping"
 )
 
 const (
@@ -83,7 +83,7 @@ func (h *ConsistentHash) AddWithReplicas(node interface{}, replicas int) {
 		h.ring[hash] = append(h.ring[hash], node)
 	}
 
-	sort.Slice(h.keys, func(i int, j int) bool {
+	sort.Slice(h.keys, func(i, j int) bool {
 		return h.keys[i] < h.keys[j]
 	})
 }

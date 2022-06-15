@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tal-tech/go-zero/core/stores/cache"
-	"github.com/tal-tech/go-zero/core/stores/sqlc"
-	"github.com/tal-tech/go-zero/core/stores/sqlx"
-	"github.com/tal-tech/go-zero/core/stringx"
-	"github.com/tal-tech/go-zero/tools/goctl/model/sql/builderx"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"github.com/zeromicro/go-zero/core/stringx"
+	"github.com/zeromicro/go-zero/tools/goctl/model/sql/builderx"
 )
 
 var (
@@ -28,7 +28,7 @@ type (
 	StudentModel interface {
 		Insert(data Student) (sql.Result, error)
 		FindOne(id int64) (*Student, error)
-		FindOneByClassName(class string, name string) (*Student, error)
+		FindOneByClassName(class, name string) (*Student, error)
 		Update(data Student) error
 		// only for test
 		Delete(id int64, className, studentName string) error
@@ -85,7 +85,7 @@ func (m *defaultStudentModel) FindOne(id int64) (*Student, error) {
 	}
 }
 
-func (m *defaultStudentModel) FindOneByClassName(class string, name string) (*Student, error) {
+func (m *defaultStudentModel) FindOneByClassName(class, name string) (*Student, error) {
 	studentClassNameKey := fmt.Sprintf("%s%v%v", cacheStudentClassNamePrefix, class, name)
 	var resp Student
 	err := m.QueryRowIndex(&resp, studentClassNameKey, m.formatPrimary, func(conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
