@@ -16,4 +16,4 @@ require (
 	github.com/zeromicro/go-zero v1.3.4
 )
 
-replace github.com/zeromicro/go-zero v1.3.4 => github.com/leafney/go-zero v1.4.3
+replace github.com/zeromicro/go-zero v1.3.4 => github.com/qingcha1/go-zero v1.3.4
