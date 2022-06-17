@@ -202,7 +202,7 @@ func (db *commonSqlConn) ExecCtx(ctx context.Context, q string, args ...interfac
 
 	err = db.brk.DoWithAcceptable(func() error {
 		datasource, err := db.DataSourceResp(q)
-		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
+		//logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
 			return err
@@ -234,7 +234,7 @@ func (db *commonSqlConn) PrepareCtx(ctx context.Context, query string) (stmt Stm
 
 	err = db.brk.DoWithAcceptable(func() error {
 		datasource, err := db.DataSourceResp(query)
-		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", query, db.cluster, db.datasource, datasource)
+		//logx.Infof("exec DataSourceResp data %v,%v,%v,%v", query, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
 			return err
@@ -362,7 +362,7 @@ func (db *commonSqlConn) queryRows(ctx context.Context, scanner func(*sql.Rows) 
 	var qerr error
 	return db.brk.DoWithAcceptable(func() error {
 		datasource, err := db.DataSourceResp(q)
-		logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
+		//logx.Infof("exec DataSourceResp data %v,%v,%v,%v", q, db.cluster, db.datasource, datasource)
 		if err != nil {
 			logInstanceError(datasource, err)
 			return err
