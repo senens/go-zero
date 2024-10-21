@@ -148,6 +148,9 @@ func RespJson(w http.ResponseWriter, err error, v interface{}, code int, msg str
 	if len(version) == 0 {
 		version = "1.0"
 	}
+	if len(secret) == 0 {
+		secret = "go-zero"
+	}
 	dataType, _ := json.Marshal(RespJsonStruct{
 		Code: code,
 		Msg:  msg,
