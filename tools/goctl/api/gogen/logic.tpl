@@ -13,6 +13,7 @@ type {{.logic}} struct {
 	Code int
     Msg string
     Version string
+    Secret string
     Header  http.Header
 }
 
@@ -26,6 +27,7 @@ func New{{.logic}}(ctx context.Context, svcCtx *svc.ServiceContext, header http.
 }
 
 func (l *{{.logic}}) {{.function}}({{.request}}) {{.responseType}} {
+    l.Secret = l.svcCtx.Config.Secret
 	// todo: add your logic here and delete this line
 
 	{{.returnString}}

@@ -40,5 +40,6 @@ type (
 		Timeout      int64         `json:",default=3000"`
 		CpuThreshold int64         `json:",default=900,range=[0:1000]"`
 		Signature    SignatureConf `json:",optional"`
+		Secret       string        `json:",optional"`
 	}
 )
