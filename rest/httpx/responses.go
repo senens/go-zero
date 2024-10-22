@@ -132,7 +132,7 @@ func RespJsonError(w http.ResponseWriter, err error, secret string) {
 			V:    "1.0",
 			Data: body,
 		})
-		str, _ := encrypt(string(dataType), secret)
+		str, _ := encrypt(secret, string(dataType))
 		WriteJson(w, http.StatusOK, str)
 	}
 }
@@ -156,7 +156,7 @@ func RespJson(w http.ResponseWriter, err error, v interface{}, code int, msg str
 		V:    version,
 		Data: v,
 	})
-	str, _ := encrypt(string(dataType), secret)
+	str, _ := encrypt(secret, string(dataType))
 
 	WriteJson(w, http.StatusOK, str)
 }
