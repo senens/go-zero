@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	errorHandler func(error) (int, interface{})
-	lock         sync.RWMutex
+	errorHandler  func(error) (int, interface{})
+	lock          sync.RWMutex
+	secretDefault = "gozerosecretkeys"
 )
 
 type RespJsonStruct struct {
@@ -189,21 +190,20 @@ func pkcs7Unpad(src []byte) []byte {
 }
 
 // Encrypt encrypts the source string using AES in ECB mode.
-func encrypt(sKey string, sSrc string) (string, error) {
+func encrypt(sSrc string, sKey string) (string, error) {
 	if sKey == "" {
 		return "", fmt.Errorf("Key为空null")
 	}
 	if sSrc == "" {
-		sSrc = "go-zero"
+		sSrc = secretDefault
 	}
-
-	block, err := aes.NewCipher([]byte(sKey))
+	block, err := aes.NewCipher([]byte(sSrc))
 	if err != nil {
 		return "", err
 	}
 
 	// Apply PKCS#7 padding to the source string.
-	src := pkcs7Pad([]byte(sSrc))
+	src := pkcs7Pad([]byte(sKey))
 
 	// Initialize an ECB mode encryption with a zero IV.
 	iv := make([]byte, aes.BlockSize)
@@ -219,14 +219,16 @@ func decrypt(sSrc string, sKey string) (string, error) {
 	if sKey == "" {
 		return "", fmt.Errorf("Key为空null")
 	}
-
-	block, err := aes.NewCipher([]byte(sKey))
+	if sSrc == "" {
+		sSrc = secretDefault
+	}
+	block, err := aes.NewCipher([]byte(sSrc))
 	if err != nil {
 		return "", err
 	}
 
 	// Decode the Base64 encoded string.
-	decoded, err := base64.StdEncoding.DecodeString(sSrc)
+	decoded, err := base64.StdEncoding.DecodeString(sKey)
 	if err != nil {
 		return "", err
 	}
