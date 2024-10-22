@@ -148,9 +148,6 @@ func RespJson(w http.ResponseWriter, err error, v interface{}, code int, msg str
 	if len(version) == 0 {
 		version = "1.0"
 	}
-	if len(secret) == 0 {
-		secret = "go-zero"
-	}
 	dataType, _ := json.Marshal(RespJsonStruct{
 		Code: code,
 		Msg:  msg,
@@ -192,12 +189,12 @@ func pkcs7Unpad(src []byte) []byte {
 }
 
 // Encrypt encrypts the source string using AES in ECB mode.
-func encrypt(sSrc string, sKey string) (string, error) {
+func encrypt(sKey string, sSrc string) (string, error) {
 	if sKey == "" {
 		return "", fmt.Errorf("Key为空null")
 	}
 	if sSrc == "" {
-		return "", nil
+		sSrc = "go-zero"
 	}
 
 	block, err := aes.NewCipher([]byte(sKey))
